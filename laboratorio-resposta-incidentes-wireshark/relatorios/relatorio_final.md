@@ -1,6 +1,6 @@
 ﻿# 📊 Relatório Executivo Consolidado do Laboratório
 
-**Projeto:** Network Forensics with Wireshark  
+**Projeto:** Forense de Rede com Wireshark  
 **Autor:** Giovanne Santos (Analyst / Blue Team)  
 **Data de Conclusão:** 2026-09-12  
 **Status do Laboratório:** 100% Concluído (Fases 01 a 06)  
@@ -9,7 +9,7 @@
 
 ## 1. Visão Geral do Projeto
 
-Este relatório executivo consolida as atividades, metodologias, análises e conclusões desenvolvidas ao longo de todas as fases do **Wireshark Incident Response Lab**. O objetivo principal foi construir uma peça prática de portfólio para demonstrar competência em **Forense de Rede**, **Análise de Tráfego de Protocolos** e **Resposta a Incidentes**, aplicando metodologias reconhecidas pelo mercado como **MITRE ATT&CK** e o ciclo de resposta a incidentes do **NIST**.
+Este relatório executivo consolida as atividades, metodologias, análises e conclusões desenvolvidas ao longo de todas as fases do **Laboratório de Resposta a Incidentes com Wireshark**. O objetivo principal foi construir uma peça prática de portfólio para demonstrar competência em **Forense de Rede**, **Análise de Tráfego de Protocolos** e **Resposta a Incidentes**, aplicando metodologias reconhecidas pelo mercado como **MITRE ATT&CK** e o ciclo de resposta a incidentes do **NIST**.
 
 ---
 
@@ -36,19 +36,19 @@ Este relatório executivo consolida as atividades, metodologias, análises e con
 
 - **Métricas:** Resolução de nomes com tempo médio de resposta de **~12ms**.
 - **Diagnóstico:** Diagnóstico de erros `NXDOMAIN` (rcode 3) decorrentes de erros de digitação e acionamento automático do mecanismo de sufixo de busca do sistema operacional (`.hitronhub.home`).
-- **Relatório Completo:** 📄 **[Relatório de Análise DNS](dns_analysis.md)**
+- **Relatório Completo:** 📄 **[Relatório de Análise DNS](analise_dns.md)**
 
 ### 2.3 Fase 03 — Análise de Tráfego TCP
 
 - **Controle de Fluxo:** Avaliação do *3-Way Handshake*, tamanhos de janela (*Window Scaling* até 8192) e tamanho máximo de segmento (`MSS` de 1220 a 1400 bytes).
 - **Diagnóstico de Retransmissão:** Identificação de um único `Duplicate ACK` isolado no pacote 35, decorrente de jitter na interface virtualizada, sem impacto em retransmissões rápidas.
-- **Relatório Completo:** 📄 **[Relatório de Análise TCP](tcp_analysis.md)**
+- **Relatório Completo:** 📄 **[Relatório de Análise TCP](analise_tcp.md)**
 
 ### 2.4 Fase 04 — Análise de Tráfego TLS
 
 - **Negociação TLS 1.3:** Dissecação dos quadros *Client Hello* e *Server Hello* estabelecidos com `example.com`.
 - **Inovação em Segurança (PQC):** Identificação da extensão `key_share` utilizando a suíte de troca de chaves pós-quântica **X25519MLKEM768** (combinação de curva elíptica X25519 com ML-KEM-768 / Kyber-768), garantindo proteção contra ataques de interceptação retroativa (*Harvest Now, Decrypt Later*).
-- **Relatório Completo:** 📄 **[Relatório de Análise TLS](tls_analysis.md)**
+- **Relatório Completo:** 📄 **[Relatório de Análise TLS](analise_tls.md)**
 
 ### 2.5 Fase 05 — Investigação de Incidente (Malware FormBook)
 
@@ -60,7 +60,7 @@ Este relatório executivo consolida as atividades, metodologias, análises e con
   - Conta de Usuário: `rvance`
   - Nome Completo: `Raymond Vance` (descoberto via pacote **SAMR QueryUserInfo** no Active Directory).
 - **Mapeamento de C2:** Extração de **15 domínios e IPs de C2** ativos com padrão de beaconing cíclico de ~8 minutos.
-- **Relatório Completo:** 📄 **[Relatório do Incidente FormBook](incident_report.md)**
+- **Relatório Completo:** 📄 **[Relatório do Incidente FormBook](relatorio_incidente.md)**
 
 ---
 
@@ -84,8 +84,8 @@ O laboratório atingiu com êxito todos os objetivos propostos. Foi demonstrado 
 
 ### 📂 Navegação pelos Relatórios Individuais
 
-- 📄 **[Relatório de Análise DNS](dns_analysis.md)**
-- 📄 **[Relatório de Análise TCP](tcp_analysis.md)**
-- 📄 **[Relatório de Análise TLS](tls_analysis.md)**
-- 📄 **[Relatório do Incidente FormBook](incident_report.md)**
-- 📄 **[Lições Aprendidas & MITRE ATT&CK](../lessons_learned.md)**
+- 📄 **[Relatório de Análise DNS](analise_dns.md)**
+- 📄 **[Relatório de Análise TCP](analise_tcp.md)**
+- 📄 **[Relatório de Análise TLS](analise_tls.md)**
+- 📄 **[Relatório do Incidente FormBook](relatorio_incidente.md)**
+- 📄 **[Lições Aprendidas & MITRE ATT&CK](../licoes_aprendidas.md)**

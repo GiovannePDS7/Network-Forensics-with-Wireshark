@@ -35,4 +35,4 @@ Gateway Padrão: 172.16.8.1
 
 Para o relatório de investigação completo com a lista de 15 domínios de C2 e mapeamento no MITRE ATT&CK, consulte:
 
-📄 **[Relatório Técnico de Incidente](../../reports/incident_report.md)**
+📄 **[Relatório Técnico de Incidente](../../relatorios/relatorio_incidente.md)**

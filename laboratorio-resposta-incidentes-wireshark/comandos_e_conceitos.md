@@ -1,6 +1,6 @@
 ﻿# 📘 Guia Técnico de Comandos e Conceitos Teóricos do Laboratório
 
-**Projeto:** Network Forensics with Wireshark  
+**Projeto:** Forense de Rede com Wireshark  
 **Autor:** Giovanne Santos (Analyst / Blue Team)  
 **Data:** 2026-09-13  
 
@@ -12,15 +12,15 @@ Este documento foi criado especificamente para **desmistificar a complexidade do
 
 ---
 
-# 🛠️ PARTE 1 — Guia Técnico de Comandos Executados
+## 🛠️ PARTE 1 — Guia Técnico de Comandos Executados
 
 Nesta seção, cada comando utilizado no laboratório é desmembrado flag por flag, explicando exatamente o que faz, por que foi escolhido e como interpretar seu resultado.
 
 ---
 
-## 1. Captura e Geração de Tráfego
+### 1. Captura e Geração de Tráfego
 
-### 1.1 Iniciar Captura Global no `tshark`
+#### 1.1 Iniciar Captura Global no `tshark`
 
 ```bash
 tshark -i any -w lab_capture.pcapng
@@ -31,7 +31,7 @@ tshark -i any -w lab_capture.pcapng
   - 💡 *Por que usarmos `-i any` e não `-i eth0`?* No WSL2 (Windows Subsystem for Linux), o tráfego DNS direcionado para o gateway (`10.255.255.254`) passa por um comutador virtual/loopback interno em vez da interface primária `eth0`. Capturar apenas na `eth0` deixaria o tráfego DNS invisível.
 - **`-w lab_capture.pcapng`**: Salva os pacotes capturados diretamente no arquivo especificado em formato PCAPNG (*Pcap Next Generation*).
 
-### 1.2 Resolução de Nomes com `dig`
+#### 1.2 Resolução de Nomes com `dig`
 
 ```bash
 dig google.com
@@ -42,7 +42,7 @@ dig +tcp cloudflare.com
 - **`dig google.com`**: Envia uma consulta DNS padrão para o registro tipo **A** (IPv4) sobre o transporte **UDP (porta 53)**.
 - **`dig +tcp cloudflare.com`**: A flag `+tcp` força o `dig` a enviar a consulta DNS sobre o protocolo **TCP (porta 53)** em vez de UDP. Utilizado no laboratório para demonstrar o handshake TCP de 3 vias aplicando-se ao serviço DNS.
 
-### 1.3 Teste de Conectividade TCP com `netcat` (`nc`)
+#### 1.3 Teste de Conectividade TCP com `netcat` (`nc`)
 
 ```bash
 nc -v example.com 80
@@ -52,7 +52,7 @@ nc -v example.com 80
 - **`-v`** (*verbose*): Exibe detalhes sobre o status do estabelecimento da conexão no terminal.
 - **`example.com 80`**: Abre um socket TCP contra o domínio `example.com` na porta `80` (HTTP). Na prática, esse comando força a realização do handshake TCP de 3 vias (SYN, SYN-ACK, ACK).
 
-### 1.4 Requisição HTTP/HTTPS com `curl`
+#### 1.4 Requisição HTTP/HTTPS com `curl`
 
 ```bash
 curl -v https://example.com
@@ -62,7 +62,7 @@ curl -v https://example.com
 - **`-v`** (*verbose*): Exibe todo o processo de negociação abaixo da aplicação, incluindo resolução de IP, conexão TCP, handshake TLS e cabeçalhos HTTP enviados/recebidos.
 - **`https://example.com`**: Dispara a negociação criptografada **TLS 1.3** na porta `443`.
 
-### 1.5 Leitura e Contagem de Pacotes no `tshark`
+#### 1.5 Leitura e Contagem de Pacotes no `tshark`
 
 ```bash
 tshark -r lab_capture.pcapng | wc -l
@@ -74,9 +74,9 @@ tshark -r lab_capture.pcapng | wc -l
 
 ---
 
-## 2. Análise de DNS no `tshark`
+### 2. Análise de DNS no `tshark`
 
-### 2.1 Filtrando Tráfego DNS com Display Filter
+#### 2.1 Filtrando Tráfego DNS com Display Filter
 
 ```bash
 tshark -r lab_capture.pcapng -Y "dns"
@@ -85,7 +85,7 @@ tshark -r lab_capture.pcapng -Y "dns"
 - **`-Y "dns"`** (*display filter*): Aplica um filtro de exibição **após** a leitura do arquivo PCAP, mostrando apenas os quadros que contêm o protocolo DNS.
   - ⚠️ *Diferença crucial entre `-Y` e `-f`:* O `-f` é um *capture filter* (usado durante a captura ao vivo no formato BPF), enquanto `-Y` é um *display filter* (usado na análise do Wireshark/tshark pós-captura).
 
-### 2.2 Extração Tabular de Campos Específicos
+#### 2.2 Extração Tabular de Campos Específicos
 
 ```bash
 tshark -r lab_capture.pcapng -Y "dns" -T fields \
@@ -112,15 +112,15 @@ tshark -r lab_capture.pcapng -Y "dns" -T fields \
   - `dns.a` / `dns.aaaa`: O endereço IP retornado na seção de resposta.
   - `dns.flags.rcode`: O código de retorno da resposta (`0` = NOERROR/Sucesso, `3` = NXDOMAIN/Não encontrado).
 
-### 2.3 Medição de Latência de Resolução DNS
+#### 2.3 Medição de Latência de Resolução DNS
 
 ```bash
 tshark -r lab_capture.pcapng -Y "dns" -T fields -e frame.number -e dns.time
 ```
 
-- **`-e dns.time`**: Campo calculated pelo Wireshark que mede o intervalo exato (em segundos) entre a consulta enviada pelo cliente e a resposta recebida do servidor DNS.
+- **`-e dns.time`**: Campo calculado pelo Wireshark que mede o intervalo exato (em segundos) entre a consulta enviada pelo cliente e a resposta recebida do servidor DNS.
 
-### 2.4 Isolamento de Respostas com Erro (`NXDOMAIN`)
+#### 2.4 Isolamento de Respostas com Erro (`NXDOMAIN`)
 
 ```bash
 tshark -r lab_capture.pcapng -Y "dns.flags.rcode == 3"
@@ -130,9 +130,9 @@ tshark -r lab_capture.pcapng -Y "dns.flags.rcode == 3"
 
 ---
 
-## 3. Análise de TCP no `tshark`
+### 3. Análise de TCP no `tshark`
 
-### 3.1 Mapeamento de Pacotes de Controle (Handshake e Encerramento)
+#### 3.1 Mapeamento de Pacotes de Controle (Handshake e Encerramento)
 
 ```bash
 tshark -r lab_capture.pcapng -Y "tcp.flags.syn==1 || tcp.flags.fin==1"
@@ -142,7 +142,7 @@ tshark -r lab_capture.pcapng -Y "tcp.flags.syn==1 || tcp.flags.fin==1"
 - **`tcp.flags.fin==1`**: Identifica pacotes com a flag **FIN** ativada (utilizados para encerrar conexões graciosamente).
 - **`||`** (*OR lógico*): Exibe pacotes que atendam a qualquer uma das duas condições.
 
-### 3.2 Listagem de Streams TCP Únicos
+#### 3.2 Listagem de Streams TCP Únicos
 
 ```bash
 tshark -r lab_capture.pcapng -T fields -e tcp.stream -Y tcp | sort -u
@@ -151,7 +151,7 @@ tshark -r lab_capture.pcapng -T fields -e tcp.stream -Y tcp | sort -u
 - **`-e tcp.stream`**: O Wireshark atribui um índice numérico único (`0`, `1`, `2`...) para cada conversa TCP individual (par IP Origem + Porta Origem ↔ IP Destino + Porta Destino).
 - **`sort -u`** (*sort unique*): Ordena os números e remove duplicatas, resultando em uma lista dos IDs de todas as conversas TCP capturadas.
 
-### 3.3 Isolamento e Acompanhamento de um Stream Específico
+#### 3.3 Isolamento e Acompanhamento de um Stream Específico
 
 ```bash
 tshark -r lab_capture.pcapng -Y "tcp.stream==0"
@@ -159,7 +159,7 @@ tshark -r lab_capture.pcapng -Y "tcp.stream==0"
 
 - **`tcp.stream==0`**: Mostra em ordem cronológica **todos os pacotes de uma única conversa TCP** (Stream 0), permitindo acompanhar do `SYN` inicial até o `FIN` final sem interferência de outros pacotes da rede.
 
-### 3.4 Motor de Análise de Anomalias do Wireshark
+#### 3.4 Motor de Análise de Anomalias do Wireshark
 
 ```bash
 tshark -r lab_capture.pcapng -Y "tcp.analysis.retransmission || tcp.analysis.duplicate_ack || tcp.analysis.zero_window"
@@ -171,9 +171,9 @@ tshark -r lab_capture.pcapng -Y "tcp.analysis.retransmission || tcp.analysis.dup
 
 ---
 
-## 4. Análise de TLS no `tshark`
+### 4. Análise de TLS no `tshark`
 
-### 4.1 Isolando Mensagens do Handshake TLS
+#### 4.1 Isolando Mensagens do Handshake TLS
 
 ```bash
 tshark -r lab_capture.pcapng -Y "tls.record.content_type==22"
@@ -181,7 +181,7 @@ tshark -r lab_capture.pcapng -Y "tls.record.content_type==22"
 
 - **`tls.record.content_type==22`**: Na especificação TLS, o tipo de registro `22` define mensagens de **Handshake** (Client Hello, Server Hello, Certificate, etc.). Utilizar este filtro de nível mais baixo garante compatibilidade caso o filtro genérico `tls.handshake` não funcione em determinadas versões da biblioteca decodificadora.
 
-### 4.2 Inspeção Verbosa de um Quadro Específico
+#### 4.2 Inspeção Verbosa de um Quadro Específico
 
 ```bash
 tshark -r lab_capture.pcapng -Y "frame.number==34" -V
@@ -189,7 +189,7 @@ tshark -r lab_capture.pcapng -Y "frame.number==34" -V
 
 - **`-V`** (*verbose / full detail*): Imprime a árvore estruturada completa com todos os campos e subcampos decodificados do pacote de número 34 (Client Hello).
 
-### 4.3 Filtrando Seções do Output com `grep`
+#### 4.3 Filtrando Seções do Output com `grep`
 
 ```bash
 tshark -r lab_capture.pcapng -Y "frame.number==36" -V | grep -A 30 "Transport Layer Security"
@@ -199,9 +199,9 @@ tshark -r lab_capture.pcapng -Y "frame.number==36" -V | grep -A 30 "Transport La
 
 ---
 
-## 5. Comandos da Investigação de Incidente (FormBook)
+### 5. Comandos da Investigação de Incidente (FormBook)
 
-### 5.1 Descompactando Evidências com Senha
+#### 5.1 Descompactando Evidências com Senha
 
 ```bash
 unzip -P infected_20260809 2026-08-09-traffic-analysis-exercise.pcap.zip
@@ -209,7 +209,7 @@ unzip -P infected_20260809 2026-08-09-traffic-analysis-exercise.pcap.zip
 
 - **`-P infected_20260809`**: Fornece a senha de descompactação do arquivo Zip diretamente pela linha de comando, sem abrir prompts interativos.
 
-### 5.2 Resumo de Conversações de Rede
+#### 5.2 Resumo de Conversações de Rede
 
 ```bash
 tshark -r 2026-08-09-traffic-analysis-exercise.pcap -q -z conv,ip | head -30
@@ -218,7 +218,7 @@ tshark -r 2026-08-09-traffic-analysis-exercise.pcap -q -z conv,ip | head -30
 - **`-q`** (*quiet*): Inibe a impressão padrão de pacote por pacote.
 - **`-z conv,ip`**: Mapeia e gera uma tabela estatística agrupando todo o tráfego transferido entre pares de endereços IP (origem ↔ destino, total de pacotes e bytes).
 
-### 5.3 Mapeamento de Requisições HTTP Maliciosas
+#### 5.3 Mapeamento de Requisições HTTP Maliciosas
 
 ```bash
 tshark -r 2026-08-09-traffic-analysis-exercise.pcap -Y "http.request" -T fields \
@@ -230,7 +230,7 @@ tshark -r 2026-08-09-traffic-analysis-exercise.pcap -Y "http.request" -T fields 
 - **`-e http.request.uri`**: Extrai o caminho/URI da requisição (ex: `/ujvq/?2kn1=...`).
 - **`-e http.user_agent`**: Extrai a string de identificação do navegador/aplicativo enviada no cabeçalho `User-Agent:`.
 
-### 5.4 Mapeamento de Ativos e Usuários do Active Directory
+#### 5.4 Mapeamento de Ativos e Usuários do Active Directory
 
 ```bash
 # Descobrir Hostname e Usuário via Kerberos
@@ -245,43 +245,43 @@ tshark -r 2026-08-09-traffic-analysis-exercise.pcap -Y "frame.number==2947" -V |
 
 ---
 
-# 📚 PARTE 2 — Guia Teórico de Conceitos Aplicados
+## 📚 PARTE 2 — Guia Teórico de Conceitos Aplicados
 
 Nesta seção, revisamos de forma didática e aprofundada os fundamentos teóricos que sustentaram cada análise no laboratório.
 
 ---
 
-## 1. Redes & Virtualização
+### 1. Redes & Virtualização
 
-### 1.1 Arquitetura de Rede Virtualizada no WSL2
+#### 1.1 Arquitetura de Rede Virtualizada no WSL2
 
 O WSL2 (Windows Subsystem for Linux 2) não compartilha diretamente a placa de rede física com o Windows; ele roda dentro de uma máquina virtual leve sobre o Hyper-V.
 
 - **vEthernet (Default Switch):** O Windows cria uma placa de rede virtual que conecta o Linux ao Host via NAT (Network Address Translation).
 - **Roteamento Interno:** Requisições para serviços locais (como o resolvedor DNS em `10.255.255.254`) utilizam interfaces virtuais de loopback/ponte interna. Por esse motivo, capturar pacotes apenas na interface `eth0` resulta em omissão de tráfego, exigindo o uso da captura global `-i any`.
 
-### 1.2 Linux Cooked Capture (SLL)
+#### 1.2 Linux Cooked Capture (SLL)
 
 Quando o `tshark` grava pacotes ouvindo em `any`, o kernel do Linux não pode utilizar o cabeçalho Ethernet II padrão (pois pacotes de interfaces diferentes possuem estruturas distintas). Ele encapsula os quadros no formato **SLL (Sock Line Level)**, substituindo o cabeçalho Ethernet por um cabeçalho fictício de 16 bytes que identifica o tipo de interface de origem.
 
 ---
 
-## 2. Protocolo DNS (Domain Name System)
+### 2. Protocolo DNS (Domain Name System)
 
-### 2.1 Registros A vs AAAA (Dual-Stack)
+#### 2.1 Registros A vs AAAA (Dual-Stack)
 
 - **Registro A:** Mapeia um nome de domínio para um endereço **IPv4** de 32 bits (ex: `104.20.23.154`).
 - **Registro AAAA:** Mapeia um nome de domínio para um endereço **IPv6** de 128 bits (ex: `2606:4700:10::ac42:93f3`). O nome "quad-A" deriva do fato de um endereço IPv6 possuir 4 vezes os bits de um IPv4.
 
-### 2.2 Algoritmo Happy Eyeballs (RFC 8305)
+#### 2.2 Algoritmo Happy Eyeballs (RFC 8305)
 
 Sistemas operacionais modernos que possuem suporte dual-stack (IPv4 e IPv6 ativados) disparam consultas DNS para registros A e AAAA **simultaneamente**. O sistema tenta conectar em ambos os endereços e escolhe o que responder mais rápido, oferecendo uma experiência transparente ao usuário caso uma das redes falhe.
 
-### 2.3 Mecanismo de Sufixo de Busca (Search Suffix / Search List)
+#### 2.3 Mecanismo de Sufixo de Busca (Search Suffix / Search List)
 
 Quando uma consulta DNS falha em resolver um nome simples ou mal digitado (como `example.com80`), o resolvedor local do sistema operacional presume que o nome possa ser um host interno da rede corporativa. Ele automaticamente anexa o sufixo de domínio da rede local (ex: `.hitronhub.home`) e reenvia a consulta (`example.com80.hitronhub.home`).
 
-### 2.4 Relevância Forense dos Códigos de Retorno (RCODE)
+#### 2.4 Relevância Forense dos Códigos de Retorno (RCODE)
 
 - `RCODE 0` (**NOERROR**): Consulta resolvida com sucesso.
 - `RCODE 3` (**NXDOMAIN**): O servidor autoritativo confirma que o domínio consultado não existe.
@@ -289,9 +289,9 @@ Quando uma consulta DNS falha em resolver um nome simples ou mal digitado (como 
 
 ---
 
-## 3. Protocolo TCP (Transmission Control Protocol)
+### 3. Protocolo TCP (Transmission Control Protocol)
 
-### 3.1 Ciclo de Vida e Handshake de 3 Vias (3-Way Handshake)
+#### 3.1 Ciclo de Vida e Handshake de 3 Vias (3-Way Handshake)
 
 O TCP é um protocolo orientado a conexão e confiável. Antes de qualquer dado ser transmitido, o cliente e o servidor sincronizam seus números de sequência:
 
@@ -306,7 +306,7 @@ O TCP é um protocolo orientado a conexão e confiável. Antes de qualquer dado 
      │                                     │
 ```
 
-### 3.2 Parâmetros de Controle de Fluxo
+#### 3.2 Parâmetros de Controle de Fluxo
 
 No momento do handshake, ambos os lados negociam parâmetros cruciais para a eficiência e integridade da transferência:
 
@@ -314,39 +314,40 @@ No momento do handshake, ambos os lados negociam parâmetros cruciais para a efi
 - **Window Scale (WS):** Como o campo original da Janela TCP no cabeçalho possui apenas 16 bits (máximo de 65.535 bytes), o *Window Scale* atua como um multiplicador exponencial, permitindo janelas de recepção de megabytes em conexões de alta velocidade.
 - **SACK (Selective Acknowledgment):** Permite que o receptor avise exatamente quais blocos de dados foram recebidos, evitando que o transmissor precise retransmitir segmentos que já chegaram corretamente.
 
-### 3.3 Diagnóstico de Confiabilidade: Duplicate ACKs
+#### 3.3 Diagnóstico de Confiabilidade: Duplicate ACKs
 
 - Quando o receptor recebe um pacote fora de ordem, ele reenvia imediatamente uma confirmação duplicada (**Duplicate ACK**) informando qual o último byte sequencial correto recebido.
 - **Regra da Retransmissão Rápida (Fast Retransmit):** Um único Duplicate ACK isolado ocorre por pequenos atrasos de rede (*jitter*) e é inofensivo. Somente quando **3 ACKs duplicados idênticos** chegam consecutivamente, o TCP conclui que o pacote foi realmente perdido e dispara a retransmissão imediata sem esperar pelo estouro de timer (*Timeout*).
 
 ---
 
-## 4. Protocolo TLS 1.3 & Criptografia Moderna
+### 4. Protocolo TLS 1.3 & Criptografia Moderna
 
-### 4.1 Handshake TLS 1.3 (1-RTT)
+#### 4.1 Handshake TLS 1.3 (1-RTT)
 
 O TLS 1.3 reduziu o tempo de estabelecimento de conexão criptografada de 2 idas e voltas (2-RTT) para apenas **1-RTT**:
 
 - **Client Hello:** O cliente envia as suítes de criptografia suportadas, a versão desejada, o nome do servidor de destino (SNI) e já inclui sua chave pública temporária (*key_share*).
 - **Server Hello:** O servidor escolhe a suíte de criptografia, responde com sua chave pública (*key_share*) e a partir desse instante todo o restante da negociação (certificados e dados) já trafega criptografado.
 
-### 4.2 Criptografia Híbrida Pós-Quântica (PQC) — X25519MLKEM768
+#### 4.2 Criptografia Híbrida Pós-Quântica (PQC) — X25519MLKEM768
 
 Identificada na análise da Fase 04 do laboratório, esta implementação combina dois algoritmos na extensão `key_share`:
 
 1. **X25519:** Criptografia de curva elíptica tradicional que garante a segurança contra ataques clássicos de hoje.
 2. **ML-KEM-768 (antigo Kyber-768):** Algoritmo de criptografia pós-quântica padronizado pelo NIST (**FIPS 203**), baseado em redes láticas (*lattice-based cryptography*), resistente a computadores quânticos operando o algoritmo de Shor.
+
 - 🛡️ **Defesa Contra Ataques "Harvest Now, Decrypt Later":** Adoção estratégica preventiva para impedir que atores maliciosos capturem e armazenem tráfego criptografado hoje para descriptografá-lo no futuro quando computadores quânticos viáveis estiverem operacionais.
 
 ---
 
-## 5. Resposta a Incidentes & Malware FormBook
+### 5. Resposta a Incidentes & Malware FormBook
 
-### 5.1 O Infostealer FormBook / XLoader
+#### 5.1 O Infostealer FormBook / XLoader
 
 O FormBook é uma das famílias de malware do tipo **Infostealer** mais ativas do mundo. Seu objetivo principal é roubar credenciais salvas em navegadores, formulários web, clientes de e-mail e registrar digitações (*keylogger*).
 
-### 5.2 Estratégia de C2: Domain Cycling & Beaconing
+#### 5.2 Estratégia de C2: Domain Cycling & Beaconing
 
 Para garantir que a comunicação não seja interrompida caso um domínio de C2 seja derrubado, o FormBook embuti uma lista de múltiplos domínios (15 no caso analisado). O malware realiza um **ciclo de beaconing**:
 
@@ -354,12 +355,12 @@ Para garantir que a comunicação não seja interrompida caso um domínio de C2 
 - Caso não receba os comandos esperados, avança para o próximo domínio da lista.
 - Cada volta completa pelos 15 domínios leva ~8 minutos, reiniciando o ciclo continuamente.
 
-### 5.3 Masquerading & Evasão
+#### 5.3 Masquerading & Evasão
 
 - **User-Agent Falso (Spoofing):** O malware simula ser um navegador legítimo (`Firefox 39 / Windows 8`), mas utiliza uma versão antiga e incompatível com o sistema real do host, permitindo criar regras de detecção de anomalia no SIEM.
 - **Exfiltração na Query String:** Dados roubados do host são codificados e anexados aos parâmetros da URL no próprio HTTP GET (ex: `?2kn1=<blob_codificado>`).
 
-### 5.4 Forense de Metadados no Active Directory (Kerberos e SAMR)
+#### 5.4 Forense de Metadados no Active Directory (Kerberos e SAMR)
 
 Sem depender de agentes de EDR no endpoint, o tráfego de rede de infraestrutura da rede Microsoft vaza identidades cruciais:
 
@@ -368,7 +369,7 @@ Sem depender de agentes de EDR no endpoint, o tráfego de rede de infraestrutura
 
 ---
 
-## 6. Mapeamento no MITRE ATT&CK
+### 6. Mapeamento no MITRE ATT&CK
 
 | Tática | Técnica | ID MITRE | Aplicação Prática |
 | :--- | :--- | :--- | :--- |
@@ -384,4 +385,3 @@ Sem depender de agentes de EDR no endpoint, o tráfego de rede de infraestrutura
 ## 🏁 Conclusão
 
 Compreender **tanto a sintaxe exata dos comandos quanto a teoria por trás dos protocolos** é o que diferencia um operador de ferramentas de um **Analista Forense de Rede / SOC**. Este guia serve como ponte entre a execução prática do laboratório e o domínio conceitual exigido na rotina de investigações de segurança.
-

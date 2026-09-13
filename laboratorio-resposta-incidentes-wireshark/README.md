@@ -1,4 +1,4 @@
-﻿# 🦈 Wireshark Incident Response Lab
+﻿# 🦈 Laboratório de Resposta a Incidentes com Wireshark
 
 Home lab de cibersegurança focado em forense de rede, análise de tráfego e investigação de incidentes usando Wireshark/tshark sobre protocolos de rede reais (DNS, TCP, TLS) e cenários reais de infecção por malware.
 
@@ -14,7 +14,7 @@ Este projeto simula o fluxo de trabalho de um analista de SOC/Blue Team: captura
 - **Ferramentas:** Wireshark, tshark, tcpdump, dig, curl, netcat, unzip
 - **Topologia:** `Kali (WSL2) → Adaptador vEthernet → Windows (Host) → Roteador → Internet → Servidor Destino`
 
-![Topologia da Rede](architecture/topology.png)
+![Topologia da Rede](arquitetura/topologia.png)
 
 ### 🗺️ Painel de Progresso
 
@@ -38,11 +38,11 @@ Este projeto simula o fluxo de trabalho de um analista de SOC/Blue Team: captura
 No diretório `pcaps`, execute o `tshark` ouvindo em todas as interfaces:
 
 ```bash
-cd ~/Network-Forensics-with-Wireshark/wireshark-incident-response-lab/pcaps
+cd ~/Network-Forensics-with-Wireshark/laboratorio-resposta-incidentes-wireshark/pcaps
 tshark -i any -w lab_capture.pcapng
 ```
 
-![Executando o tshark no Kali](screenshots/phase1_general_capture/image1.png)
+![Executando o tshark no Kali](capturas_de_tela/fase1_captura_geral/image1.png)
 
 > 🔧 **Achado Técnico — Por que `-i any` em vez de `-i eth0`?**
 > Uma tentativa inicial capturando apenas na `eth0` não registrava o tráfego DNS, mesmo com o `dig` funcionando. Ao investigar com `tcpdump` e `ip route`, confirmou-se que embora a `eth0` seja a rota padrão, as consultas DNS para o gateway local (`10.255.255.254`) trafegam por uma interface interna separada do WSL2. A captura com `-i any` resolveu o problema, documentando uma particularidade real do ambiente WSL2.
@@ -66,7 +66,7 @@ Interrompa a captura com `Ctrl+C` e valide o total de pacotes capturados:
 tshark -r lab_capture.pcapng | wc -l
 ```
 
-![Validação da captura](screenshots/phase1_general_capture/image2.png)
+![Validação da captura](capturas_de_tela/fase1_captura_geral/image2.png)
 
 ### Passo 4 — Inspeção Inicial no Wireshark GUI
 
@@ -74,21 +74,21 @@ tshark -r lab_capture.pcapng | wc -l
 wireshark lab_capture.pcapng
 ```
 
-![Abertura no Wireshark GUI](screenshots/phase1_general_capture/image3.png)
+![Abertura no Wireshark GUI](capturas_de_tela/fase1_captura_geral/image3.png)
 
 ### Resumo dos Protocolos Capturados
 
 - **DNS (Pacotes 11-30):** Queries A/AAAA para `google.com`, `cloudflare.com` e `example.com`.
   
-  ![Análise de DNS no PCAP](screenshots/phase1_general_capture/image4.png)
+  ![Análise de DNS no PCAP](capturas_de_tela/fase1_captura_geral/image4.png)
 
 - **TCP Handshake (Pacotes 13-15, 31-33):** Handshakes de 3 vias (SYN, SYN-ACK, ACK) nas portas 53 e 443.
   
-  ![Análise de TCP Handshake](screenshots/phase1_general_capture/image5.png)
+  ![Análise de TCP Handshake](capturas_de_tela/fase1_captura_geral/image5.png)
 
 - **TLS 1.3 (Pacotes 34-54):** Handshake criptografado para `example.com`.
   
-  ![Análise de TLS 1.3](screenshots/phase1_general_capture/image6.png)
+  ![Análise de TLS 1.3](capturas_de_tela/fase1_captura_geral/image6.png)
 
 ---
 
@@ -102,7 +102,7 @@ wireshark lab_capture.pcapng
 tshark -r lab_capture.pcapng -Y "dns"
 ```
 
-![Filtro DNS no tshark](screenshots/phase2_dns/image1.png)
+![Filtro DNS no tshark](capturas_de_tela/fase2_dns/image1.png)
 
 ### Passo 2 — Extração Tabular de Campos
 
@@ -110,7 +110,7 @@ tshark -r lab_capture.pcapng -Y "dns"
 tshark -r lab_capture.pcapng -Y "dns" -T fields -e frame.number -e frame.time_relative -e ip.src -e ip.dst -e dns.flags.response -e dns.qry.name -e dns.qry.type -e dns.a -e dns.aaaa -e dns.flags.rcode
 ```
 
-![Extração tabular DNS](screenshots/phase2_dns/image2.png)
+![Extração tabular DNS](capturas_de_tela/fase2_dns/image2.png)
 
 ### Passo 3 — Análise de Falhas (NXDOMAIN e Search Suffix)
 
@@ -118,7 +118,7 @@ tshark -r lab_capture.pcapng -Y "dns" -T fields -e frame.number -e frame.time_re
 tshark -r lab_capture.pcapng -Y "dns.flags.rcode == 3"
 ```
 
-![Análise de NXDOMAIN](screenshots/phase2_dns/image3.png)
+![Análise de NXDOMAIN](capturas_de_tela/fase2_dns/image3.png)
 
 > ⚠️ **Diagnóstico da Falha NXDOMAIN:**
 >
@@ -143,7 +143,7 @@ tshark -r lab_capture.pcapng -Y "dns.flags.rcode == 3"
 tshark -r lab_capture.pcapng -Y "tcp.flags.syn==1 || tcp.flags.fin==1"
 ```
 
-![Filtro SYN e FIN](screenshots/phase3_tcp/image1.png)
+![Filtro SYN e FIN](capturas_de_tela/fase3_tcp/image1.png)
 
 ### Passo 2 — Identificação dos Streams TCP
 
@@ -151,7 +151,7 @@ tshark -r lab_capture.pcapng -Y "tcp.flags.syn==1 || tcp.flags.fin==1"
 tshark -r lab_capture.pcapng -T fields -e tcp.stream -Y tcp | sort -u
 ```
 
-![Mapeamento de Streams](screenshots/phase3_tcp/image2.png)
+![Mapeamento de Streams](capturas_de_tela/fase3_tcp/image2.png)
 
 | Stream | Descrição do Tráfego | Porta Destino |
 | :---: | :--- | :---: |
@@ -187,7 +187,7 @@ Foi identificado um único **Duplicate ACK** no pacote 35 (`[TCP Dup ACK 34#1]`)
 tshark -r lab_capture.pcapng -Y "tls.record.content_type==22"
 ```
 
-![Handshake TLS](screenshots/phase4_tls/image1.png)
+![Handshake TLS](capturas_de_tela/fase4_tls/image1.png)
 
 ### Passo 2 — Inspeção do Client Hello (Pacote 34)
 
@@ -202,7 +202,7 @@ tshark -r lab_capture.pcapng -Y "tls.record.content_type==22"
 tshark -r lab_capture.pcapng -Y "frame.number==36" -V | grep -A 30 "Transport Layer Security"
 ```
 
-![Server Hello](screenshots/phase4_tls/image2.png)
+![Server Hello](capturas_de_tela/fase4_tls/image2.png)
 
 - **Suíte Selecionada:** `TLS_AES_256_GCM_SHA384 (0x1302)`.
 - **Compressão:** `null (0)` (evita vulnerabilidades como CRIME e BREACH).
@@ -265,16 +265,16 @@ tshark -r lab_capture.pcapng -Y "frame.number==36" -V | grep -A 30 "Transport La
 
 Para uma análise aprofundada sobre as lições aprendidas, particularidades de redes virtualizadas e recomendações defensivas completas para equipes de SOC, consulte o documento:
 
-📄 **[Lições Aprendidas e Síntese Técnica](lessons_learned.md)**
+📄 **[Lições Aprendidas e Síntese Técnica](licoes_aprendidas.md)**
 
 ---
 
 ## 📄 Relatórios & Guias do Laboratório
 
-- 📘 **[Guia Técnico de Comandos & Conceitos Teóricos](commands_and_concepts.md)**
-- 💡 **[Lições Aprendidas & Síntese Técnica](lessons_learned.md)**
-- 🔗 **[Análise DNS](reports/dns_analysis.md)**
-- 🔗 **[Análise TCP](reports/tcp_analysis.md)**
-- 🔗 **[Análise TLS](reports/tls_analysis.md)**
-- 🔗 **[Relatório do Incidente (FormBook)](reports/incident_report.md)**
-- 🔗 **[Relatório Executivo Final](reports/final_report.md)**
+- 📘 **[Guia Técnico de Comandos & Conceitos Teóricos](comandos_e_conceitos.md)**
+- 💡 **[Lições Aprendidas & Síntese Técnica](licoes_aprendidas.md)**
+- 🔗 **[Análise DNS](relatorios/analise_dns.md)**
+- 🔗 **[Análise TCP](relatorios/analise_tcp.md)**
+- 🔗 **[Análise TLS](relatorios/analise_tls.md)**
+- 🔗 **[Relatório do Incidente (FormBook)](relatorios/relatorio_incidente.md)**
+- 🔗 **[Relatório Executivo Final](relatorios/relatorio_final.md)**
