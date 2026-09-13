@@ -349,7 +349,7 @@ O FormBook é uma das famílias de malware do tipo **Infostealer** mais ativas d
 
 #### 5.2 Estratégia de C2: Domain Cycling & Beaconing
 
-Para garantir que a comunicação não seja interrompida caso um domínio de C2 seja derrubado, o FormBook embuti uma lista de múltiplos domínios (15 no caso analisado). O malware realiza um **ciclo de beaconing**:
+Para garantir que a comunicação não seja interrompida caso um domínio de C2 seja derrubado, o FormBook embute uma lista de múltiplos domínios (15 no caso analisado). O malware realiza um **ciclo de beaconing**:
 
 - Envia de 7 a 8 requisições HTTP GET consecutivas para o primeiro domínio.
 - Caso não receba os comandos esperados, avança para o próximo domínio da lista.

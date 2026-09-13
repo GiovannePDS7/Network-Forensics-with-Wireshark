@@ -18,7 +18,7 @@ Este documento reúne as principais lições aprendidas, descobertas técnicas i
 
 - 💡 **A Pegadinha do `-i eth0` no WSL2:** Durante a Fase 01, tentar capturar pacotes apenas na interface `eth0` não registrava o tráfego DNS local para o gateway (`10.255.255.254`). Isso ocorreu porque a arquitetura de rede virtualizada do WSL2 roteia requisições locais por uma interface virtual de loopback/vEthernet interna separada.
 - 🔧 **Solução / Boa Prática:** Em ambientes virtualizados ou conteinerizados, sempre iniciar capturas diagnósticas utilizando a opção **`-i any`** (ou escutar em todas as interfaces) para evitar pontos cegos.
-- 📦 **Encapsulamento SLL:** Capturas realizadas com `-i any` no Linux geram quadros no formato *Linux cooked capture v1 (SLL)* em vez de Ethernet puro. O tshark e o Wireshark tratan isso nativamente sem perda de dados das camadas superiores (IP, TCP, UDP).
+- 📦 **Encapsulamento SLL:** Capturas realizadas com `-i any` no Linux geram quadros no formato *Linux cooked capture v1 (SLL)* em vez de Ethernet puro. O tshark e o Wireshark tratam isso nativamente sem perda de dados das camadas superiores (IP, TCP, UDP).
 
 ### 2.2 Resolução de Nomes e Diagnóstico de Erros (DNS)
 
@@ -59,7 +59,7 @@ Este documento reúne as principais lições aprendidas, descobertas técnicas i
 
 ---
 
-## 4. Recomendações Defensivas Recomendadas para o SOC
+## 4. Recomendações Defensivas para o SOC
 
 1. **Monitoramento Integrado Endpoint + Rede:** Integrar alertas de tráfego de rede (SIEM/Zeek) com dados do EDR para associar requisições maliciosas ao processo executável exato.
 2. **Regras de Detecção de User-Agent Incompatível:** Implementar alertas de SIEM para monitorar requisições HTTP onde a versão do sistema operacional declarada no User-Agent divirja do sistema operacional real da estação.

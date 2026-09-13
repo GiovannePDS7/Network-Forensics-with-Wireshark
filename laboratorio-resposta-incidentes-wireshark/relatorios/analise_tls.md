@@ -23,7 +23,7 @@ Este relatório apresenta os resultados da investigação do protocolo **TLS (Tr
 tshark -r lab_capture.pcapng -Y "tls.record.content_type==22"
 ```
 
-### 2.2 Inspecção Detalhada de Quadros Específicos
+### 2.2 Inspeção Detalhada de Quadros Específicos
 
 ```bash
 # Inspecionar Client Hello (Pacote 34)
